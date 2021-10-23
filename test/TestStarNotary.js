@@ -47,7 +47,7 @@ it('lets user1 get the funds after the sale', async () => {
     let balanceOfUser1BeforeTransaction = await web3.eth.getBalance(user1);
 
     // give user2 one time approval to transfer token with ID = starId
-    const receipt = await instance.allowBuying(starId, user2, {
+    const receipt = await instance.allowManaging(starId, user2, {
         from: user1
     });
     // we can add `gasPrice:0` to the trailing closure and ignore the fee calculation below
@@ -84,7 +84,7 @@ it('lets user2 buy a star, if it is put up for sale, user2 owns the star', async
     await instance.putStarUpForSale(starId, starPrice, {
         from: user1
     });
-    await instance.allowBuying(starId, user2, {
+    await instance.allowManaging(starId, user2, {
         from: user1
     });
     await instance.buyStar(starId, {
@@ -111,7 +111,7 @@ it('lets user2 buy a star and decreases its balance in ether', async () => {
         from: user1
     });
     const balanceOfUser2BeforeTransaction = await web3.eth.getBalance(user2);
-    await instance.allowBuying(starId, user2, {
+    await instance.allowManaging(starId, user2, {
         from: user1
     });
 
@@ -144,7 +144,24 @@ it('lets 2 users exchange stars', async () => {
     // 3. Verify that the owners changed
     let instance = await StarNotary.deployed();
     let user1 = accounts[1];
-    let starId = 7;
+    let starId1 = 100;
+    await instance.createStar('Star 1', starId1, {
+        from: user1
+    });
+
+    let user2 = accounts[2];
+    let starId2 = 200;
+    await instance.createStar('Star 2', starId2, {
+        from: user2
+    });
+
+    await instance.allowManaging(starId1, user2, {
+        from: user1
+    });
+    await instance.exchangeStars(starId1, starId2, {from: user2});
+
+    assert.equal(await instance.ownerOf.call(starId1), user2);
+    assert.equal(await instance.ownerOf.call(starId2), user1);
 });
 
 it('lets a user transfer a star', async () => {
@@ -153,13 +170,13 @@ it('lets a user transfer a star', async () => {
     // 3. Verify the star owner changed.
     let instance = await StarNotary.deployed();
     let user1 = accounts[1];
-    let starId = 8;
+    let starId = 9;
 });
 
 it('lookUptokenIdToStarInfo test', async () => {
     let instance = await StarNotary.deployed();
     let user1 = accounts[1];
-    let starId = 9;
+    let starId = 10;
     await instance.createStar('awesome star', starId, {
         from: user1
     });
